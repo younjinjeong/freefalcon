@@ -3,7 +3,7 @@
 
 #pragma once
 #include <comdef.h>
-#include <atlbase.h>
+#include <cassert>
 #include <comcat.h>
 #include <string>
 
@@ -30,7 +30,7 @@ namespace ComSup
     public:
         SingleAutoLock(T *pT, bool bInitialLock = true)
         {
-            ATLASSERT(pT);
+            assert(pT);
             m_pT = pT;
             m_bAquired = false;
 

@@ -32,9 +32,6 @@
 #include "remotelb.h"
 
 #include "include/comsup.h"
-extern CComModule _Module;
-#include <atlbase.h>
-#include <atlcom.h>
 #include "../../../gnet/include/core.h"       // main symbols
 
 // Imports

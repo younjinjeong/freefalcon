@@ -3,7 +3,6 @@
 #include <windows.h>
 #include "falclib.h"
 #import "GMPrint.tlb"
-#include <atlbase.h>
 #include "include/comsup.h"
 
 extern int g_nPrintToFile;
