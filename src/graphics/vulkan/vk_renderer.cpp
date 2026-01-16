@@ -35,7 +35,7 @@ bool VkRenderer::Initialize(void* windowHandle, uint32_t width, uint32_t height)
     m_height = height;
 
     // Create device
-    m_device = std::make_unique<VkDevice>();
+    m_device = std::make_unique<VulkanDevice>();
     if (!m_device->Initialize(windowHandle, width, height)) {
         std::cerr << "Failed to initialize Vulkan device" << std::endl;
         return false;

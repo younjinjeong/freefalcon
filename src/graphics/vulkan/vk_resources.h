@@ -12,6 +12,7 @@
 #define GRAPHICS_VK_RESOURCES_H
 
 #include "../common/renderer_interface.h"
+#include <windows.h>
 #include <vulkan/vulkan.h>
 
 namespace Graphics {
@@ -62,11 +63,11 @@ private:
 // VkBuffer - Vulkan Buffer Resource
 //=============================================================================
 
-class VkBuffer : public IBuffer {
+class VulkanBuffer : public IBuffer {
 public:
-    VkBuffer(VulkanDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
+    VulkanBuffer(VulkanDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
              VkBuffer buffer, VkDeviceMemory memory);
-    virtual ~VkBuffer();
+    virtual ~VulkanBuffer();
 
     // IBuffer interface
     uint32_t GetSize() const override { return m_size; }

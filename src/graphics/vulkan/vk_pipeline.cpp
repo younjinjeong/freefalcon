@@ -24,7 +24,7 @@ PipelineConfig PipelineConfig::CreateDefault(VkExtent2D extent, VkRenderPass ren
     config.renderPass = renderPass;
 
     // Set up default vertex input (position, normal, texcoord, color)
-    VkPipeline::GetDefaultVertexDescription(config.vertexBindings, config.vertexAttributes);
+    VulkanPipeline::GetDefaultVertexDescription(config.vertexBindings, config.vertexAttributes);
 
     return config;
 }
@@ -33,17 +33,17 @@ PipelineConfig PipelineConfig::CreateDefault(VkExtent2D extent, VkRenderPass ren
 // VkPipeline Implementation
 //=============================================================================
 
-VkPipeline::VkPipeline(VulkanDevice* device)
+VulkanPipeline::VulkanPipeline(VulkanDevice* device)
     : m_device(device)
 {
 }
 
-VkPipeline::~VkPipeline()
+VulkanPipeline::~VulkanPipeline()
 {
     Destroy();
 }
 
-bool VkPipeline::Create(const PipelineConfig& config)
+bool VulkanPipeline::Create(const PipelineConfig& config)
 {
     if (!CreateDescriptorSetLayout()) {
         std::cerr << "Failed to create descriptor set layout" << std::endl;
@@ -63,7 +63,7 @@ bool VkPipeline::Create(const PipelineConfig& config)
     return true;
 }
 
-void VkPipeline::Destroy()
+void VulkanPipeline::Destroy()
 {
     VkDevice device = m_device->GetLogicalDevice();
 
@@ -83,12 +83,12 @@ void VkPipeline::Destroy()
     }
 }
 
-void VkPipeline::Bind(VkCommandBuffer commandBuffer)
+void VulkanPipeline::Bind(VkCommandBuffer commandBuffer)
 {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 }
 
-void VkPipeline::GetDefaultVertexDescription(
+void VulkanPipeline::GetDefaultVertexDescription(
     std::vector<VkVertexInputBindingDescription>& bindings,
     std::vector<VkVertexInputAttributeDescription>& attributes)
 {
@@ -132,7 +132,7 @@ void VkPipeline::GetDefaultVertexDescription(
     attributes.push_back(colorAttribute);
 }
 
-bool VkPipeline::CreateDescriptorSetLayout()
+bool VulkanPipeline::CreateDescriptorSetLayout()
 {
     // Uniform buffer binding (matrices)
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -166,7 +166,7 @@ bool VkPipeline::CreateDescriptorSetLayout()
     return true;
 }
 
-bool VkPipeline::CreatePipelineLayout()
+bool VulkanPipeline::CreatePipelineLayout()
 {
     // Push constants for quick uniform data (world/view/projection matrices)
     VkPushConstantRange pushConstantRange{};
@@ -190,7 +190,7 @@ bool VkPipeline::CreatePipelineLayout()
     return true;
 }
 
-bool VkPipeline::CreateGraphicsPipeline(const PipelineConfig& config)
+bool VulkanPipeline::CreateGraphicsPipeline(const PipelineConfig& config)
 {
     // Shader stages
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -344,7 +344,7 @@ VkPipelineCache::~VkPipelineCache()
     Clear();
 }
 
-VkPipeline* VkPipelineCache::GetPipeline(const RenderState& state, VkRenderPass renderPass, VkExtent2D extent,
+VulkanPipeline* VkPipelineCache::GetPipeline(const RenderState& state, VkRenderPass renderPass, VkExtent2D extent,
                                          VkShaderModule vertexShader, VkShaderModule fragmentShader)
 {
     // Create key
@@ -415,7 +415,7 @@ VkPipeline* VkPipelineCache::GetPipeline(const RenderState& state, VkRenderPass 
     }
 
     // Create pipeline
-    VkPipeline* pipeline = new VkPipeline(m_device);
+    VulkanPipeline* pipeline = new VulkanPipeline(m_device);
     if (!pipeline->Create(config)) {
         delete pipeline;
         return nullptr;

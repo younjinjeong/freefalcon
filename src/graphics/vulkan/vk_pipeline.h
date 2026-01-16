@@ -16,6 +16,7 @@
 #include "../common/renderer_interface.h"
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <unordered_map>
 
 namespace Graphics {
 namespace Vulkan {
@@ -72,10 +73,10 @@ struct PipelineConfig {
 // VkPipeline - Graphics Pipeline Management
 //=============================================================================
 
-class VkPipeline {
+class VulkanPipeline {
 public:
-    VkPipeline(VulkanDevice* device);
-    ~VkPipeline();
+    VulkanPipeline(VulkanDevice* device);
+    ~VulkanPipeline();
 
     // Create pipeline from configuration
     bool Create(const PipelineConfig& config);
@@ -115,7 +116,7 @@ public:
     ~VkPipelineCache();
 
     // Get or create pipeline for a given state
-    VkPipeline* GetPipeline(const RenderState& state, VkRenderPass renderPass, VkExtent2D extent,
+    VulkanPipeline* GetPipeline(const RenderState& state, VkRenderPass renderPass, VkExtent2D extent,
                             VkShaderModule vertexShader, VkShaderModule fragmentShader);
 
     // Clear all cached pipelines

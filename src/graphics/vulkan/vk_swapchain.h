@@ -12,6 +12,7 @@
 #ifndef GRAPHICS_VK_SWAPCHAIN_H
 #define GRAPHICS_VK_SWAPCHAIN_H
 
+#include <windows.h>
 #include <vulkan/vulkan.h>
 #include <vector>
 

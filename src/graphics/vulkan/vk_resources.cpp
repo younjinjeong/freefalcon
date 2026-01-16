@@ -95,7 +95,7 @@ TextureFormat VkTexture::FromVulkanFormat(VkFormat format)
 // VkBuffer Implementation
 //=============================================================================
 
-VkBuffer::VkBuffer(VulkanDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
+VulkanBuffer::VulkanBuffer(VulkanDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
                    ::VkBuffer buffer, VkDeviceMemory memory)
     : m_device(device)
     , m_buffer(buffer)
@@ -107,7 +107,7 @@ VkBuffer::VkBuffer(VulkanDevice* device, BufferUsage usage, BufferAccess access,
 {
 }
 
-VkBuffer::~VkBuffer()
+VulkanBuffer::~VulkanBuffer()
 {
     if (m_mappedData != nullptr) {
         Unmap();
@@ -124,7 +124,7 @@ VkBuffer::~VkBuffer()
     }
 }
 
-void* VkBuffer::Map()
+void* VulkanBuffer::Map()
 {
     if (m_mappedData != nullptr) {
         return m_mappedData; // Already mapped
@@ -139,7 +139,7 @@ void* VkBuffer::Map()
     return m_mappedData;
 }
 
-void VkBuffer::Unmap()
+void VulkanBuffer::Unmap()
 {
     if (m_mappedData != nullptr) {
         vkUnmapMemory(m_device->GetLogicalDevice(), m_memory);
@@ -147,7 +147,7 @@ void VkBuffer::Unmap()
     }
 }
 
-VkBufferUsageFlagBits VkBuffer::ToVulkanUsage(BufferUsage usage)
+VkBufferUsageFlagBits VulkanBuffer::ToVulkanUsage(BufferUsage usage)
 {
     switch (usage) {
         case BufferUsage::Vertex:   return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
