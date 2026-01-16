@@ -34,13 +34,23 @@ jobs:
         cache: true
         stripdown: true
 
-    - name: Verify Vulkan SDK
+    - name: Verify Vulkan SDK and GLM
       run: |
         Write-Host "VULKAN_SDK: $env:VULKAN_SDK"
         if (Test-Path "$env:VULKAN_SDK\Include\vulkan\vulkan.h") {
           Write-Host "Vulkan SDK headers found"
         } else {
           Write-Host "ERROR: Vulkan SDK headers not found"
+          exit 1
+        }
+
+        Write-Host "`nChecking GLM library..."
+        if (Test-Path "src\extlibs\glm\glm.hpp") {
+          Write-Host "GLM library found"
+        } else {
+          Write-Host "ERROR: GLM library not found"
+          Write-Host "Contents of src\extlibs:"
+          Get-ChildItem src\extlibs -ErrorAction SilentlyContinue
           exit 1
         }
       shell: powershell
