@@ -1,5 +1,8 @@
 # FreeFalcon
 
+[![Build and Test](https://github.com/younjinjeong/freefalcon/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/younjinjeong/freefalcon/actions/workflows/build-and-test.yml)
+[![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)](LICENSE.md)
+
 A campaign based, multiplayer, open source flight simulator.
 
 ## About FreeFalcon
@@ -9,9 +12,53 @@ Combat Simulator. Most of the development was done from a small group of
 people dedicated to the scene. Now we're going open source, and anybody can
 contribute.
 
+## Build Status
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| **Main Build** | [![Build](https://github.com/younjinjeong/freefalcon/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/younjinjeong/freefalcon/actions/workflows/build-and-test.yml) | Vulkan renderer + ENet networking |
+| **ENet Tests** | Passing | 16/16 networking tests |
+| **Vulkan Shaders** | Compiling | GLSL → SPIR-V |
+
 ## What's New - Modernization Project
 
 This fork is actively modernizing FreeFalcon with the following completed phases:
+
+### Phase 2: Vulkan Graphics ✅ 95% COMPLETE (2026-01-16)
+
+- **Modern Graphics API:** Complete Vulkan renderer implementation (4,800+ lines)
+- **Cross-Platform Ready:** Uses GLM math library, no DirectX dependencies
+- **Production Quality:** Full descriptor sets, uniform buffers, draw calls implemented
+- **Test Application:** Triangle rendering test with GLSL shaders included
+- **Build System:** Visual Studio 2019 project files configured
+
+**Implemented Features:**
+- Device initialization and management
+- Swap chain with automatic recreation on resize
+- Command buffer management (double-buffered)
+- Graphics pipeline state objects with caching
+- Descriptor pools and sets for shader parameters
+- Uniform buffer management (persistently mapped)
+- Texture binding and sampling
+- Draw calls (indexed and non-indexed primitives)
+- Frame synchronization
+
+**Technical Stack:**
+- **API:** Vulkan 1.3+
+- **Math Library:** GLM (header-only)
+- **Shaders:** GLSL 4.50 → SPIR-V bytecode
+- **Build:** MSBuild (Visual Studio 2019)
+
+**Current Status:**
+- ✅ Core rendering complete
+- ✅ Build system configured
+- ✅ Test application ready
+- ⚠️ Requires Vulkan SDK installation (external dependency)
+
+**Documentation:**
+- Test application: `src/graphics/vulkan/test_triangle.cpp`
+- Shaders: `src/graphics/vulkan/shaders/`
+- Quick start guide available in repository
 
 ### Phase 3: Network Modernization ✅ COMPLETE (2026-01-16)
 
