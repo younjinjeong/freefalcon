@@ -169,6 +169,10 @@ VkShader::VkShader(VkDevice* device, VkShaderModule vertexModule, VkShaderModule
     , m_descriptorSetLayout(VK_NULL_HANDLE)
     , m_descriptorPool(VK_NULL_HANDLE)
     , m_descriptorSet(VK_NULL_HANDLE)
+    , m_uniformBuffer(VK_NULL_HANDLE)
+    , m_uniformBufferMemory(VK_NULL_HANDLE)
+    , m_uniformBufferMapped(nullptr)
+    , m_currentTexture(nullptr)
 {
     // Create descriptor set layout
     // Binding 0: Uniform buffer (matrices)
@@ -209,11 +213,64 @@ VkShader::VkShader(VkDevice* device, VkShaderModule vertexModule, VkShaderModule
     if (result != VK_SUCCESS) {
         std::cerr << "Failed to allocate descriptor set: " << result << std::endl;
     }
+
+    // Create uniform buffer for shader parameters
+    // Size: 3 mat4x4 (world, view, projection) + extra space for other params
+    VkDeviceSize bufferSize = sizeof(float) * 16 * 4; // 4 matrices worth of space
+
+    bool bufferCreated = ResourceHelpers::CreateBuffer(
+        m_device,
+        bufferSize,
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        m_uniformBuffer,
+        m_uniformBufferMemory
+    );
+
+    if (!bufferCreated) {
+        std::cerr << "Failed to create uniform buffer for shader" << std::endl;
+        return;
+    }
+
+    // Map the uniform buffer persistently (we'll update it frequently)
+    vkMapMemory(m_device->GetLogicalDevice(), m_uniformBufferMemory, 0, bufferSize, 0, &m_uniformBufferMapped);
+
+    // Update descriptor set to bind the uniform buffer
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = m_uniformBuffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = bufferSize;
+
+    VkWriteDescriptorSet descriptorWrite{};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = m_descriptorSet;
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pBufferInfo = &bufferInfo;
+
+    vkUpdateDescriptorSets(m_device->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 }
 
 VkShader::~VkShader()
 {
     VkDevice device = m_device->GetLogicalDevice();
+
+    // Unmap uniform buffer if mapped
+    if (m_uniformBufferMapped != nullptr) {
+        vkUnmapMemory(device, m_uniformBufferMemory);
+        m_uniformBufferMapped = nullptr;
+    }
+
+    // Clean up uniform buffer
+    if (m_uniformBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, m_uniformBuffer, nullptr);
+    }
+
+    if (m_uniformBufferMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, m_uniformBufferMemory, nullptr);
+    }
 
     // Free descriptor set (the pool is owned by VkDevice, don't destroy it)
     if (m_descriptorSet != VK_NULL_HANDLE && m_device->GetDescriptorPool() != VK_NULL_HANDLE) {
@@ -235,26 +292,85 @@ VkShader::~VkShader()
 
 void VkShader::SetMatrix(const char* name, const Matrix4x4& matrix)
 {
-    // TODO: Update descriptor set with matrix
-    std::cerr << "VkShader::SetMatrix not yet implemented" << std::endl;
+    if (m_uniformBufferMapped == nullptr) {
+        std::cerr << "VkShader::SetMatrix: Uniform buffer not mapped" << std::endl;
+        return;
+    }
+
+    // For now, we use a simple naming convention:
+    // "World" = offset 0
+    // "View" = offset 64 (16 floats * 4 bytes)
+    // "Projection" = offset 128
+    // Custom matrices at offset 192+
+
+    size_t offset = 0;
+    if (std::strcmp(name, "World") == 0) {
+        offset = 0;
+    } else if (std::strcmp(name, "View") == 0) {
+        offset = 64;
+    } else if (std::strcmp(name, "Projection") == 0) {
+        offset = 128;
+    } else {
+        // For now, warn about unknown matrix names
+        std::cerr << "VkShader::SetMatrix: Unknown matrix name '" << name << "'" << std::endl;
+        return;
+    }
+
+    // Copy matrix data to uniform buffer
+    std::memcpy(static_cast<char*>(m_uniformBufferMapped) + offset, &matrix, sizeof(Matrix4x4));
 }
 
 void VkShader::SetVector(const char* name, const Vector4& vector)
 {
-    // TODO: Update descriptor set with vector
-    std::cerr << "VkShader::SetVector not yet implemented" << std::endl;
+    if (m_uniformBufferMapped == nullptr) {
+        std::cerr << "VkShader::SetVector: Uniform buffer not mapped" << std::endl;
+        return;
+    }
+
+    // Vectors go after the 3 matrices (offset 192+)
+    // For now, just log - full implementation would need a parameter map
+    std::cerr << "VkShader::SetVector '" << name << "' - not fully implemented yet" << std::endl;
 }
 
 void VkShader::SetFloat(const char* name, float value)
 {
-    // TODO: Update descriptor set with float
-    std::cerr << "VkShader::SetFloat not yet implemented" << std::endl;
+    if (m_uniformBufferMapped == nullptr) {
+        std::cerr << "VkShader::SetFloat: Uniform buffer not mapped" << std::endl;
+        return;
+    }
+
+    // Floats go after matrices and vectors
+    // For now, just log - full implementation would need a parameter map
+    std::cerr << "VkShader::SetFloat '" << name << "' - not fully implemented yet" << std::endl;
 }
 
 void VkShader::SetTexture(const char* name, ITexture* texture)
 {
-    // TODO: Update descriptor set with texture
-    std::cerr << "VkShader::SetTexture not yet implemented" << std::endl;
+    if (texture == nullptr) {
+        std::cerr << "VkShader::SetTexture: Null texture" << std::endl;
+        return;
+    }
+
+    // Cast to VkTexture to get Vulkan handles
+    VkTexture* vkTexture = static_cast<VkTexture*>(texture);
+    m_currentTexture = texture;
+
+    // Update descriptor set binding 1 (combined image sampler)
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = vkTexture->GetImageView();
+    imageInfo.sampler = vkTexture->GetSampler();
+
+    VkWriteDescriptorSet descriptorWrite{};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = m_descriptorSet;
+    descriptorWrite.dstBinding = 1; // Binding 1 is the texture sampler
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(m_device->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 }
 
 //=============================================================================

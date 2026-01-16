@@ -121,8 +121,13 @@ private:
     VkDescriptorPool m_descriptorPool;
     VkDescriptorSet m_descriptorSet;
 
-    // TODO: Implement shader parameters storage
-    // For now, this is a minimal implementation
+    // Uniform buffer for shader parameters (world/view/projection matrices, etc.)
+    VkBuffer m_uniformBuffer;
+    VkDeviceMemory m_uniformBufferMemory;
+    void* m_uniformBufferMapped;
+
+    // Current texture binding
+    ITexture* m_currentTexture;
 };
 
 //=============================================================================
