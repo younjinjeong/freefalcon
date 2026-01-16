@@ -702,7 +702,7 @@ ITexture* VulkanDevice::CreateTexture(uint32_t width, uint32_t height, TextureFo
 
 IBuffer* VulkanDevice::CreateBuffer(BufferUsage usage, BufferAccess access, uint32_t size, const void* data)
 {
-    VkBufferUsageFlags vkUsage = VkBuffer::ToVulkanUsage(usage);
+    VkBufferUsageFlags vkUsage = VulkanBuffer::ToVulkanUsage(usage);
 
     // Determine memory properties based on access
     VkMemoryPropertyFlags memoryProperties;
@@ -759,7 +759,7 @@ IBuffer* VulkanDevice::CreateBuffer(BufferUsage usage, BufferAccess access, uint
         vkUnmapMemory(m_device, memory);
     }
 
-    return new VkBuffer(this, usage, access, size, buffer, memory);
+    return new VulkanBuffer(this, usage, access, size, buffer, memory);
 }
 
 IShader* VulkanDevice::CreateShader(const char* vertexShaderCode, const char* fragmentShaderCode)
@@ -802,7 +802,7 @@ void VulkanDevice::DestroyTexture(ITexture* texture)
 
 void VulkanDevice::DestroyBuffer(IBuffer* buffer)
 {
-    delete static_cast<VkBuffer*>(buffer);
+    delete static_cast<VulkanBuffer*>(buffer);
 }
 
 void VulkanDevice::DestroyShader(IShader* shader)

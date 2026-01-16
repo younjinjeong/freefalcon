@@ -12,6 +12,7 @@
 #include "vk_resources.h"
 #include <iostream>
 #include <cstring>
+#include <array>
 
 namespace Graphics {
 namespace Vulkan {
