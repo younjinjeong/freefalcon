@@ -78,6 +78,8 @@ public:
     long ip_address;
     // peer port to connect to
     unsigned short remotePort;
+    // protocol type (CAPI_UDP_PROTOCOL, CAPI_TCP_PROTOCOL, CAPI_ENET_PROTOCOL, etc.)
+    int protocolType;
 };
 
 #if 0

@@ -8,6 +8,7 @@
 #include "capiopt.h"
 #include "Comms/udp.h"
 #include "Comms/rudp.h"
+#include "Comms/comenet.h"
 #include "router.h" //KCK This needs to go away
 #include "UI/INCLUDE/uicomms.h" // UI comms manager
 #include "falclib/include/msginc/sendchatmessage.h"
@@ -164,21 +165,112 @@ int InitCommsStuff(ComDataClass *comData)
     com_API_set_local_ports(comData->localPort, comData->localPort + 1);
     vuLocalSessionEntity->SetAddress(VU_ADDRESS(0, com_API_get_my_receive_port(), com_API_get_my_reliable_receive_port()));
 
-    // group handles
-    // UDP
-    FalconGlobalUDPHandle = ComAPICreateGroup("CreateGroup WAN FalconGlobalUDPHandle\n", F4CommsMaxUDPMessageSize, 0);
-
-    if ( not FalconGlobalUDPHandle)
+    // Check if ENet protocol is requested
+    if (comData->protocolType == CAPI_ENET_PROTOCOL)
     {
-        return F4CommsConnectionCallback(F4COMMS_ERROR_UDP_NOT_AVAILABLE);
+        // === ENET PATH ===
+        MonoPrint("F4Comms: Using ENet protocol\n");
+
+        // Initialize ENet
+        if (com_ENet_initialize() != 0)
+        {
+            MonoPrint("F4Comms: Failed to initialize ENet\n");
+            return F4CommsConnectionCallback(F4COMMS_ERROR_UDP_NOT_AVAILABLE);
+        }
+
+        if (comData->ip_address == 0)
+        {
+            // Host mode - create ENet server
+            MonoPrint("F4Comms: Creating ENet host on port %d\n", comData->localPort);
+            com_API_handle enetHost = com_ENet_open_host(
+                F4CommsMaxUDPMessageSize,  // Buffer size
+                "FreeFalcon",               // Game name
+                comData->localPort,         // Port
+                16                          // Max clients
+            );
+
+            if (!enetHost)
+            {
+                MonoPrint("F4Comms: Failed to create ENet host\n");
+                com_ENet_shutdown();
+                return F4CommsConnectionCallback(F4COMMS_ERROR_UDP_NOT_AVAILABLE);
+            }
+
+            // Create group handle for ENet
+            FalconGlobalUDPHandle = ComAPICreateGroup("ENet UDP GROUP", F4CommsMaxUDPMessageSize, 0);
+
+            if (!FalconGlobalUDPHandle)
+            {
+                com_ENet_close(enetHost);
+                com_ENet_shutdown();
+                return F4CommsConnectionCallback(F4COMMS_ERROR_UDP_NOT_AVAILABLE);
+            }
+
+            // Add ENet handle to group
+            ComAPIAddToGroup(FalconGlobalUDPHandle, enetHost);
+            MonoPrint("F4Comms: ENet server started successfully\n");
+        }
+        else
+        {
+            // Client mode - connect to ENet server
+            char* serverIP = ComAPIinet_htoa(comData->ip_address);
+            MonoPrint("F4Comms: Connecting to ENet server %s:%d\n", serverIP, comData->remotePort);
+
+            com_API_handle enetClient = com_ENet_open_client(
+                F4CommsMaxUDPMessageSize,  // Buffer size
+                serverIP,                   // Server IP
+                comData->remotePort         // Server port
+            );
+
+            if (!enetClient)
+            {
+                MonoPrint("F4Comms: Failed to connect to ENet server\n");
+                com_ENet_shutdown();
+                return F4CommsConnectionCallback(F4COMMS_ERROR_UDP_NOT_AVAILABLE);
+            }
+
+            // Create group handle for ENet
+            FalconGlobalUDPHandle = ComAPICreateGroup("ENet UDP GROUP", F4CommsMaxUDPMessageSize, 0);
+
+            if (!FalconGlobalUDPHandle)
+            {
+                com_ENet_close(enetClient);
+                com_ENet_shutdown();
+                return F4CommsConnectionCallback(F4COMMS_ERROR_UDP_NOT_AVAILABLE);
+            }
+
+            // Add ENet handle to group
+            ComAPIAddToGroup(FalconGlobalUDPHandle, enetClient);
+            MonoPrint("F4Comms: Connected to ENet server successfully\n");
+        }
+
+        // ENet provides reliable delivery, so TCP handle uses same UDP handle
+        FalconGlobalTCPHandle = FalconGlobalUDPHandle;
+
+        // Set protocol flag
+        FalconConnectionProtocol = FCP_UDP_AVAILABLE bitor FCP_RUDP_AVAILABLE;
     }
-
-    // TCP
-    FalconGlobalTCPHandle = ComAPICreateGroup("WAN RUDP GROUP", F4CommsMaxTCPMessageSize, 0);
-
-    if ( not FalconGlobalTCPHandle)
+    else
     {
-        return F4CommsConnectionCallback(F4COMMS_ERROR_MULTICAST_NOT_AVAILABLE);
+        // === EXISTING UDP/RUDP PATH ===
+        MonoPrint("F4Comms: Using legacy UDP/RUDP protocol\n");
+
+        // group handles
+        // UDP
+        FalconGlobalUDPHandle = ComAPICreateGroup("CreateGroup WAN FalconGlobalUDPHandle\n", F4CommsMaxUDPMessageSize, 0);
+
+        if ( not FalconGlobalUDPHandle)
+        {
+            return F4CommsConnectionCallback(F4COMMS_ERROR_UDP_NOT_AVAILABLE);
+        }
+
+        // TCP
+        FalconGlobalTCPHandle = ComAPICreateGroup("WAN RUDP GROUP", F4CommsMaxTCPMessageSize, 0);
+
+        if ( not FalconGlobalTCPHandle)
+        {
+            return F4CommsConnectionCallback(F4COMMS_ERROR_MULTICAST_NOT_AVAILABLE);
+        }
     }
 
     // server
@@ -274,7 +366,7 @@ int CleanupComms(void)
     if (FalconGlobalUDPHandle)
         ComAPIClose(FalconGlobalUDPHandle);
 
-    if (FalconGlobalTCPHandle)
+    if (FalconGlobalTCPHandle && FalconGlobalTCPHandle != FalconGlobalUDPHandle)
         ComAPIClose(FalconGlobalTCPHandle);
 
     if (FalconTCPListenHandle)
@@ -282,6 +374,13 @@ int CleanupComms(void)
 
     // if (FalconInitialUDPHandle)
     // ComAPIClose(FalconInitialUDPHandle);
+
+    // Shutdown ENet if it was used
+    if (FalconConnectionProtocol & FCP_UDP_AVAILABLE)
+    {
+        com_ENet_shutdown();
+        MonoPrint("F4Comms: ENet shutdown\n");
+    }
 
     // Kill off any dangling sessions
     CleanupDanglingList();

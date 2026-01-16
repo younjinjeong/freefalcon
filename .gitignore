@@ -15,3 +15,7 @@ obj/
 *.bak
 *.user
 *.tmp
+
+# Claude Code files
+.claude/
+nul

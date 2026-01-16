@@ -32,7 +32,8 @@ extern "C" {
 #define CAPI_DPLAY_IPX_PROTOCOL 9
 #define CAPI_RUDP_PROTOCOL 10
 #define CAPI_GROUP_PROTOCOL 11
-#define CAPI_LAST_PROTOCOL CAPI_GROUP_PROTOCOL
+#define CAPI_ENET_PROTOCOL 12           /* Modern ENet protocol (reliable UDP) */
+#define CAPI_LAST_PROTOCOL CAPI_ENET_PROTOCOL
 
 #define CAPI_HOST 1
 #define CAPI_JOIN 0
