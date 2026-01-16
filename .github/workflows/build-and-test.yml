@@ -29,12 +29,34 @@ jobs:
 
     - name: Setup Vulkan SDK
       run: |
+        Write-Host "Downloading Vulkan SDK..."
+        $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe" -OutFile vulkan-sdk.exe
-        Start-Process -FilePath vulkan-sdk.exe -ArgumentList "/S" -Wait
+        Write-Host "Download complete. Starting installation (this may take 5-10 minutes)..."
+        $process = Start-Process -FilePath vulkan-sdk.exe -ArgumentList "/S" -PassThru
+
+        # Wait with timeout and progress output
+        $timeout = 600 # 10 minutes
+        $elapsed = 0
+        while (-not $process.HasExited -and $elapsed -lt $timeout) {
+          Start-Sleep -Seconds 30
+          $elapsed += 30
+          Write-Host "Still installing... ($elapsed seconds elapsed)"
+        }
+
+        if (-not $process.HasExited) {
+          Write-Host "Installation timeout after $timeout seconds"
+          $process.Kill()
+          exit 1
+        }
+
+        Write-Host "Installation complete. Setting environment variables..."
         # Set environment variable for this session
         $env:VULKAN_SDK = "C:\VulkanSDK\$(Get-ChildItem C:\VulkanSDK | Select-Object -Last 1 -ExpandProperty Name)"
         echo "VULKAN_SDK=$env:VULKAN_SDK" >> $env:GITHUB_ENV
+        Write-Host "Vulkan SDK setup complete: $env:VULKAN_SDK"
       shell: powershell
+      timeout-minutes: 15
 
     - name: Verify Vulkan SDK
       run: |
@@ -139,11 +161,33 @@ jobs:
 
     - name: Setup Vulkan SDK
       run: |
+        Write-Host "Downloading Vulkan SDK..."
+        $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe" -OutFile vulkan-sdk.exe
-        Start-Process -FilePath vulkan-sdk.exe -ArgumentList "/S" -Wait
+        Write-Host "Download complete. Starting installation (this may take 5-10 minutes)..."
+        $process = Start-Process -FilePath vulkan-sdk.exe -ArgumentList "/S" -PassThru
+
+        # Wait with timeout and progress output
+        $timeout = 600 # 10 minutes
+        $elapsed = 0
+        while (-not $process.HasExited -and $elapsed -lt $timeout) {
+          Start-Sleep -Seconds 30
+          $elapsed += 30
+          Write-Host "Still installing... ($elapsed seconds elapsed)"
+        }
+
+        if (-not $process.HasExited) {
+          Write-Host "Installation timeout after $timeout seconds"
+          $process.Kill()
+          exit 1
+        }
+
+        Write-Host "Installation complete. Setting environment variables..."
         $env:VULKAN_SDK = "C:\VulkanSDK\$(Get-ChildItem C:\VulkanSDK | Select-Object -Last 1 -ExpandProperty Name)"
         echo "VULKAN_SDK=$env:VULKAN_SDK" >> $env:GITHUB_ENV
+        Write-Host "Vulkan SDK setup complete: $env:VULKAN_SDK"
       shell: powershell
+      timeout-minutes: 15
 
     - name: Compile test shaders
       run: |
