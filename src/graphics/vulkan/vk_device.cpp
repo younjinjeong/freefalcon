@@ -1,3 +1,4 @@
+#include <windows.h>
 /*
  * vk_device.cpp
  *

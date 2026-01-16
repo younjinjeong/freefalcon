@@ -295,7 +295,7 @@ void VkRenderer::DrawPrimitive(PrimitiveTopology topology, uint32_t vertexStart,
     vkShader->SetMatrix("Projection", m_projectionMatrix);
 
     // Get or create pipeline for current state
-    VkPipeline* pipeline = m_pipelineCache->GetPipeline(
+    VulkanPipeline* pipeline = m_pipelineCache->GetPipeline(
         m_currentState,
         m_swapChain->GetRenderPass(),
         m_swapChain->GetExtent(),
@@ -370,7 +370,7 @@ void VkRenderer::DrawIndexedPrimitive(PrimitiveTopology topology, uint32_t index
     vkShader->SetMatrix("Projection", m_projectionMatrix);
 
     // Get or create pipeline for current state
-    VkPipeline* pipeline = m_pipelineCache->GetPipeline(
+    VulkanPipeline* pipeline = m_pipelineCache->GetPipeline(
         m_currentState,
         m_swapChain->GetRenderPass(),
         m_swapChain->GetExtent(),
@@ -447,7 +447,7 @@ void VkRenderer::SetVertexBuffer(IBuffer* buffer)
     m_currentVertexBuffer = buffer;
 
     if (m_inFrame && m_currentCommandBuffer != VK_NULL_HANDLE && buffer) {
-        VkBuffer vkBuffer = static_cast<VkBuffer*>(buffer)->GetBuffer();
+        VkBuffer vkBuffer = static_cast<VulkanBuffer*>(buffer)->GetBuffer();
         VkDeviceSize offset = 0;
         vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, &vkBuffer, &offset);
     }
@@ -458,7 +458,7 @@ void VkRenderer::SetIndexBuffer(IBuffer* buffer)
     m_currentIndexBuffer = buffer;
 
     if (m_inFrame && m_currentCommandBuffer != VK_NULL_HANDLE && buffer) {
-        VkBuffer vkBuffer = static_cast<VkBuffer*>(buffer)->GetBuffer();
+        VkBuffer vkBuffer = static_cast<VulkanBuffer*>(buffer)->GetBuffer();
         vkCmdBindIndexBuffer(m_currentCommandBuffer, vkBuffer, 0, VK_INDEX_TYPE_UINT32);
     }
 }

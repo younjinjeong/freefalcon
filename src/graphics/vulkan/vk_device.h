@@ -13,7 +13,6 @@
 #define GRAPHICS_VK_DEVICE_H
 
 #include "../common/renderer_interface.h"
-#include <windows.h>
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <string>

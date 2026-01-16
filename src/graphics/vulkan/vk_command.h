@@ -12,7 +12,6 @@
 #ifndef GRAPHICS_VK_COMMAND_H
 #define GRAPHICS_VK_COMMAND_H
 
-#include <windows.h>
 #include <vulkan/vulkan.h>
 #include <vector>
 

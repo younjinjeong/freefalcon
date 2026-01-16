@@ -12,7 +12,6 @@
 #define GRAPHICS_VK_RESOURCES_H
 
 #include "../common/renderer_interface.h"
-#include <windows.h>
 #include <vulkan/vulkan.h>
 
 namespace Graphics {
