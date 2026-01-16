@@ -1,4 +1,4 @@
-name: Build and Test (Simplified)
+name: Build and Test
 
 on:
   push:
@@ -12,8 +12,8 @@ env:
   PLATFORM: Win32
 
 jobs:
-  build-core:
-    name: Build Core Libraries
+  build:
+    name: Build FreeFalcon
     runs-on: windows-latest
 
     steps:
@@ -27,16 +27,69 @@ jobs:
       with:
         msbuild-architecture: x64
 
+    - name: Install Vulkan SDK
+      uses: jakoch/install-vulkan-sdk-action@v1.0.0
+      with:
+        vulkan_version: latest
+        cache: true
+        stripdown: true
+
+    - name: Verify Vulkan SDK
+      run: |
+        Write-Host "VULKAN_SDK: $env:VULKAN_SDK"
+        if (Test-Path "$env:VULKAN_SDK\Include\vulkan\vulkan.h") {
+          Write-Host "Vulkan SDK headers found"
+        } else {
+          Write-Host "ERROR: Vulkan SDK headers not found"
+          exit 1
+        }
+      shell: powershell
+
     - name: Build ENet library
       run: |
-        echo "Building ENet networking library..."
+        Write-Host "Building ENet networking library..."
         MSBuild src\comms\comms.vcxproj -p:Configuration=$env:BUILD_CONFIGURATION -p:Platform=$env:PLATFORM -v:minimal
       shell: powershell
       continue-on-error: true
 
+    - name: Build Vulkan library
+      run: |
+        Write-Host "Building Vulkan graphics library..."
+        MSBuild src\graphics\vulkan\vulkan.vcxproj -p:Configuration=$env:BUILD_CONFIGURATION -p:Platform=$env:PLATFORM -v:minimal
+      shell: powershell
+
+    - name: Compile Vulkan shaders
+      run: |
+        Write-Host "Compiling Vulkan shaders..."
+        cd src\graphics\vulkan\shaders
+        $glslc = "$env:VULKAN_SDK\Bin\glslc.exe"
+
+        if (Test-Path $glslc) {
+          Write-Host "Compiling triangle.vert..."
+          & $glslc triangle.vert -o triangle_vert.spv
+
+          Write-Host "Compiling triangle.frag..."
+          & $glslc triangle.frag -o triangle_frag.spv
+
+          if ((Test-Path triangle_vert.spv) -and (Test-Path triangle_frag.spv)) {
+            Write-Host "Shaders compiled successfully"
+            $vertSize = (Get-Item triangle_vert.spv).Length
+            $fragSize = (Get-Item triangle_frag.spv).Length
+            Write-Host "  Vertex shader: $vertSize bytes"
+            Write-Host "  Fragment shader: $fragSize bytes"
+          } else {
+            Write-Host "ERROR: Shader compilation failed"
+            exit 1
+          }
+        } else {
+          Write-Host "ERROR: glslc compiler not found at: $glslc"
+          exit 1
+        }
+      shell: powershell
+
     - name: Build FreeFalcon main executable
       run: |
-        echo "Building FreeFalcon main executable (excluding Vulkan)..."
+        Write-Host "Building FreeFalcon main executable..."
         MSBuild src\FFViper.vcxproj -p:Configuration=$env:BUILD_CONFIGURATION -p:Platform=$env:PLATFORM -v:minimal
       shell: powershell
       continue-on-error: true
@@ -44,16 +97,23 @@ jobs:
     - name: Check build artifacts
       run: |
         Write-Host "Checking build outputs..."
+
+        $vulkanLib = "build\x86\release_win32\graphics\vulkan\vulkan.lib"
+        if (Test-Path $vulkanLib) {
+          $size = [math]::Round((Get-Item $vulkanLib).Length / 1KB, 2)
+          Write-Host "Vulkan library built: $vulkanLib ($size KB)"
+        } else {
+          Write-Host "WARNING: Vulkan library not found at $vulkanLib"
+        }
+
         if (Test-Path "build\x86\release_win32") {
+          Write-Host "`nAll build outputs:"
           Get-ChildItem -Path build\x86\release_win32 -Recurse -Include *.lib,*.exe,*.dll | ForEach-Object {
             $size = [math]::Round($_.Length / 1KB, 2)
-            Write-Host "Built: $($_.FullName) - $size KB"
+            Write-Host "  $($_.Name) - $size KB"
           }
-        } else {
-          Write-Host "Build directory not found (expected - dependencies may be missing)"
         }
       shell: powershell
-      continue-on-error: true
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -64,12 +124,13 @@ jobs:
           build/x86/release_win32/**/*.lib
           build/x86/release_win32/**/*.exe
           build/x86/release_win32/**/*.dll
+          src/graphics/vulkan/shaders/*.spv
         retention-days: 7
 
   test-enet:
     name: Test ENet Networking
     runs-on: windows-latest
-    needs: build-core
+    needs: build
 
     steps:
     - name: Checkout code
@@ -80,7 +141,7 @@ jobs:
 
     - name: Build ENet test
       run: |
-        echo "Building ENet test suite..."
+        Write-Host "Building ENet test suite..."
         MSBuild src\test_enet.vcxproj -p:Configuration=Debug -p:Platform=$env:PLATFORM -v:minimal
       shell: powershell
       continue-on-error: true
@@ -89,68 +150,42 @@ jobs:
       run: |
         $testExe = "build\x86\debug_win32\test_enet.exe"
         if (Test-Path $testExe) {
-          echo "Running ENet tests..."
+          Write-Host "Running ENet tests..."
           & $testExe
           if ($LASTEXITCODE -eq 0) {
-            echo "✓ All ENet tests passed"
+            Write-Host "All ENet tests passed"
           } else {
-            echo "✗ ENet tests failed with exit code: $LASTEXITCODE"
+            Write-Host "ENet tests failed with exit code: $LASTEXITCODE"
             exit 1
           }
         } else {
-          echo "⚠ ENet test executable not found, skipping tests"
+          Write-Host "WARNING: ENet test executable not found, skipping tests"
         }
       shell: powershell
       continue-on-error: true
 
-  validate-vulkan-code:
-    name: Validate Vulkan Code (Syntax Only)
-    runs-on: windows-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.3
-
-    - name: Syntax check Vulkan code
-      run: |
-        Write-Host "Validating Vulkan source code syntax..."
-        Write-Host "Note: Full Vulkan build requires local Vulkan SDK installation"
-        Write-Host ""
-        Write-Host "To test Vulkan renderer locally:"
-        Write-Host "  1. Install Vulkan SDK from https://vulkan.lunarg.com/"
-        Write-Host "  2. Build: MSBuild src\graphics\vulkan\vulkan.vcxproj"
-        Write-Host "  3. Test: Run test_triangle.exe"
-        Write-Host ""
-        Write-Host "Vulkan source files present:"
-        Get-ChildItem src\graphics\vulkan\*.cpp,src\graphics\vulkan\*.h | ForEach-Object {
-          Write-Host "  - $($_.Name)"
-        }
-      shell: powershell
-
   report:
     name: Build Report
     runs-on: windows-latest
-    needs: [build-core, test-enet, validate-vulkan-code]
+    needs: [build, test-enet]
     if: always()
 
     steps:
     - name: Generate build report
       run: |
-        echo "## Build Report" >> $env:GITHUB_STEP_SUMMARY
-        echo "" >> $env:GITHUB_STEP_SUMMARY
-        echo "**Branch:** ${{ github.ref_name }}" >> $env:GITHUB_STEP_SUMMARY
-        echo "**Commit:** ${{ github.sha }}" >> $env:GITHUB_STEP_SUMMARY
-        echo "**Triggered by:** ${{ github.actor }}" >> $env:GITHUB_STEP_SUMMARY
-        echo "" >> $env:GITHUB_STEP_SUMMARY
-        echo "### Build Results" >> $env:GITHUB_STEP_SUMMARY
-        echo "- Core Libraries: ${{ needs.build-core.result }}" >> $env:GITHUB_STEP_SUMMARY
-        echo "- ENet Tests: ${{ needs.test-enet.result }}" >> $env:GITHUB_STEP_SUMMARY
-        echo "- Vulkan Code Validation: ${{ needs.validate-vulkan-code.result }}" >> $env:GITHUB_STEP_SUMMARY
-        echo "" >> $env:GITHUB_STEP_SUMMARY
-        echo "### Notes" >> $env:GITHUB_STEP_SUMMARY
-        echo "- Vulkan renderer requires manual testing with Vulkan SDK installed locally" >> $env:GITHUB_STEP_SUMMARY
-        echo "- See QUICKSTART.md for Vulkan setup instructions" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "## Build Report" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "**Branch:** ${{ github.ref_name }}" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "**Commit:** ${{ github.sha }}" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "**Triggered by:** ${{ github.actor }}" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "### Build Results" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "- Main Build: ${{ needs.build.result }}" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "- ENet Tests: ${{ needs.test-enet.result }}" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "### Components Built" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "- ENet Networking Library" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "- Vulkan Graphics Library" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "- Vulkan Shaders (SPIR-V)" >> $env:GITHUB_STEP_SUMMARY
+        Write-Host "- FreeFalcon Main Executable" >> $env:GITHUB_STEP_SUMMARY
       shell: powershell
