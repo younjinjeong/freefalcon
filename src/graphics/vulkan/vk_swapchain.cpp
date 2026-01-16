@@ -13,7 +13,7 @@
 namespace Graphics {
 namespace Vulkan {
 
-VkSwapChain::VkSwapChain(VkDevice* device)
+VkSwapChain::VkSwapChain(VulkanDevice* device)
     : m_device(device)
 {
 }

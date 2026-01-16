@@ -19,7 +19,7 @@ namespace Graphics {
 namespace Vulkan {
 
 // Forward declaration
-class VkDevice;
+class VulkanDevice;
 
 //=============================================================================
 // Frame Sync Objects
@@ -37,7 +37,7 @@ struct FrameSyncObjects {
 
 class VkCommandManager {
 public:
-    VkCommandManager(VkDevice* device);
+    VkCommandManager(VulkanDevice* device);
     ~VkCommandManager();
 
     // Initialization
@@ -64,7 +64,7 @@ private:
     void DestroySyncObjects();
 
     // Device reference
-    VkDevice* m_device;
+    VulkanDevice* m_device;
 
     // Command buffers (one per frame in flight)
     std::vector<VkCommandBuffer> m_commandBuffers;

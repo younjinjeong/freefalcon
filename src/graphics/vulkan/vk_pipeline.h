@@ -21,7 +21,7 @@ namespace Graphics {
 namespace Vulkan {
 
 // Forward declarations
-class VkDevice;
+class VulkanDevice;
 class VkShader;
 
 //=============================================================================
@@ -74,7 +74,7 @@ struct PipelineConfig {
 
 class VkPipeline {
 public:
-    VkPipeline(VkDevice* device);
+    VkPipeline(VulkanDevice* device);
     ~VkPipeline();
 
     // Create pipeline from configuration
@@ -99,7 +99,7 @@ private:
     bool CreatePipelineLayout();
     bool CreateGraphicsPipeline(const PipelineConfig& config);
 
-    VkDevice* m_device;
+    VulkanDevice* m_device;
     VkPipeline m_pipeline = VK_NULL_HANDLE;
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
@@ -111,7 +111,7 @@ private:
 
 class VkPipelineCache {
 public:
-    VkPipelineCache(VkDevice* device);
+    VkPipelineCache(VulkanDevice* device);
     ~VkPipelineCache();
 
     // Get or create pipeline for a given state
@@ -137,7 +137,7 @@ private:
         size_t operator()(const PipelineKey& key) const;
     };
 
-    VkDevice* m_device;
+    VulkanDevice* m_device;
     std::unordered_map<PipelineKey, VkPipeline*, PipelineKeyHash> m_pipelines;
 };
 

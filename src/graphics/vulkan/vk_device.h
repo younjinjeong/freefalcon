@@ -50,13 +50,13 @@ struct SwapChainSupportDetails {
 };
 
 //=============================================================================
-// VkDevice - Vulkan Device Management
+// VulkanDevice - Vulkan Device Management
 //=============================================================================
 
-class VkDevice : public IDevice {
+class VulkanDevice : public IDevice {
 public:
-    VkDevice();
-    virtual ~VkDevice();
+    VulkanDevice();
+    virtual ~VulkanDevice();
 
     // IDevice interface
     bool Initialize(void* windowHandle, uint32_t width, uint32_t height) override;

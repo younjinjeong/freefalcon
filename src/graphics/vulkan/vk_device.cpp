@@ -40,16 +40,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 // VkDevice Implementation
 //=============================================================================
 
-VkDevice::VkDevice()
+VulkanDevice::VulkanDevice()
 {
 }
 
-VkDevice::~VkDevice()
+VulkanDevice::~VulkanDevice()
 {
     Shutdown();
 }
 
-bool VkDevice::Initialize(void* windowHandle, uint32_t width, uint32_t height)
+bool VulkanDevice::Initialize(void* windowHandle, uint32_t width, uint32_t height)
 {
     m_width = width;
     m_height = height;
@@ -93,7 +93,7 @@ bool VkDevice::Initialize(void* windowHandle, uint32_t width, uint32_t height)
     return true;
 }
 
-void VkDevice::Shutdown()
+void VulkanDevice::Shutdown()
 {
     if (m_device != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(m_device);
@@ -132,7 +132,7 @@ void VkDevice::Shutdown()
     }
 }
 
-bool VkDevice::CreateInstance()
+bool VulkanDevice::CreateInstance()
 {
     if (m_enableValidationLayers && !CheckValidationLayerSupport()) {
         std::cerr << "Validation layers requested but not available" << std::endl;
@@ -184,7 +184,7 @@ bool VkDevice::CreateInstance()
     return true;
 }
 
-bool VkDevice::SetupDebugMessenger()
+bool VulkanDevice::SetupDebugMessenger()
 {
     VkDebugUtilsMessengerCreateInfoEXT createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -207,7 +207,7 @@ bool VkDevice::SetupDebugMessenger()
     return result == VK_SUCCESS;
 }
 
-bool VkDevice::CreateSurface(void* windowHandle)
+bool VulkanDevice::CreateSurface(void* windowHandle)
 {
 #ifdef _WIN32
     VkWin32SurfaceCreateInfoKHR createInfo{};
@@ -227,7 +227,7 @@ bool VkDevice::CreateSurface(void* windowHandle)
 #endif
 }
 
-bool VkDevice::PickPhysicalDevice()
+bool VulkanDevice::PickPhysicalDevice()
 {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
@@ -265,7 +265,7 @@ bool VkDevice::PickPhysicalDevice()
     return true;
 }
 
-bool VkDevice::CreateLogicalDevice()
+bool VulkanDevice::CreateLogicalDevice()
 {
     QueueFamilyIndices indices = FindQueueFamilies(m_physicalDevice);
 
@@ -326,7 +326,7 @@ bool VkDevice::CreateLogicalDevice()
     return true;
 }
 
-bool VkDevice::CreateCommandPool()
+bool VulkanDevice::CreateCommandPool()
 {
     QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(m_physicalDevice);
 
@@ -344,7 +344,7 @@ bool VkDevice::CreateCommandPool()
     return true;
 }
 
-bool VkDevice::CreateDescriptorPool()
+bool VulkanDevice::CreateDescriptorPool()
 {
     // Create a descriptor pool that can allocate:
     // - 1000 uniform buffer descriptors
@@ -372,7 +372,7 @@ bool VkDevice::CreateDescriptorPool()
     return true;
 }
 
-bool VkDevice::CheckValidationLayerSupport()
+bool VulkanDevice::CheckValidationLayerSupport()
 {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -398,7 +398,7 @@ bool VkDevice::CheckValidationLayerSupport()
     return true;
 }
 
-std::vector<const char*> VkDevice::GetRequiredExtensions()
+std::vector<const char*> VulkanDevice::GetRequiredExtensions()
 {
     std::vector<const char*> extensions;
 
@@ -416,7 +416,7 @@ std::vector<const char*> VkDevice::GetRequiredExtensions()
     return extensions;
 }
 
-bool VkDevice::IsDeviceSuitable(VkPhysicalDevice device)
+bool VulkanDevice::IsDeviceSuitable(VkPhysicalDevice device)
 {
     QueueFamilyIndices indices = FindQueueFamilies(device);
 
@@ -435,7 +435,7 @@ bool VkDevice::IsDeviceSuitable(VkPhysicalDevice device)
            supportedFeatures.samplerAnisotropy;
 }
 
-QueueFamilyIndices VkDevice::FindQueueFamilies(VkPhysicalDevice device)
+QueueFamilyIndices VulkanDevice::FindQueueFamilies(VkPhysicalDevice device)
 {
     QueueFamilyIndices indices;
 
@@ -473,7 +473,7 @@ QueueFamilyIndices VkDevice::FindQueueFamilies(VkPhysicalDevice device)
     return indices;
 }
 
-SwapChainSupportDetails VkDevice::QuerySwapChainSupport(VkPhysicalDevice device)
+SwapChainSupportDetails VulkanDevice::QuerySwapChainSupport(VkPhysicalDevice device)
 {
     SwapChainSupportDetails details;
 
@@ -496,7 +496,7 @@ SwapChainSupportDetails VkDevice::QuerySwapChainSupport(VkPhysicalDevice device)
     return details;
 }
 
-bool VkDevice::CheckDeviceExtensionSupport(VkPhysicalDevice device)
+bool VulkanDevice::CheckDeviceExtensionSupport(VkPhysicalDevice device)
 {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -513,7 +513,7 @@ bool VkDevice::CheckDeviceExtensionSupport(VkPhysicalDevice device)
     return requiredExtensions.empty();
 }
 
-int VkDevice::RateDeviceSuitability(VkPhysicalDevice device)
+int VulkanDevice::RateDeviceSuitability(VkPhysicalDevice device)
 {
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
@@ -533,18 +533,18 @@ int VkDevice::RateDeviceSuitability(VkPhysicalDevice device)
     return score;
 }
 
-const char* VkDevice::GetDeviceName() const
+const char* VulkanDevice::GetDeviceName() const
 {
     return m_deviceName.c_str();
 }
 
-void VkDevice::GetBackBufferSize(uint32_t& width, uint32_t& height) const
+void VulkanDevice::GetBackBufferSize(uint32_t& width, uint32_t& height) const
 {
     width = m_width;
     height = m_height;
 }
 
-uint32_t VkDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+uint32_t VulkanDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
 {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
@@ -559,7 +559,7 @@ uint32_t VkDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags pro
     throw std::runtime_error("Failed to find suitable memory type");
 }
 
-VkFormat VkDevice::FindSupportedFormat(const std::vector<VkFormat>& candidates,
+VkFormat VulkanDevice::FindSupportedFormat(const std::vector<VkFormat>& candidates,
                                        VkImageTiling tiling,
                                        VkFormatFeatureFlags features) const
 {
@@ -577,7 +577,7 @@ VkFormat VkDevice::FindSupportedFormat(const std::vector<VkFormat>& candidates,
     throw std::runtime_error("Failed to find supported format");
 }
 
-VkFormat VkDevice::FindDepthFormat() const
+VkFormat VulkanDevice::FindDepthFormat() const
 {
     return FindSupportedFormat(
         {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
@@ -586,7 +586,7 @@ VkFormat VkDevice::FindDepthFormat() const
     );
 }
 
-VkCommandBuffer VkDevice::BeginSingleTimeCommands()
+VkCommandBuffer VulkanDevice::BeginSingleTimeCommands()
 {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -606,7 +606,7 @@ VkCommandBuffer VkDevice::BeginSingleTimeCommands()
     return commandBuffer;
 }
 
-void VkDevice::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+void VulkanDevice::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
 {
     vkEndCommandBuffer(commandBuffer);
 
@@ -622,7 +622,7 @@ void VkDevice::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
 }
 
 // Resource creation implementations
-ITexture* VkDevice::CreateTexture(uint32_t width, uint32_t height, TextureFormat format, const void* data)
+ITexture* VulkanDevice::CreateTexture(uint32_t width, uint32_t height, TextureFormat format, const void* data)
 {
     VkFormat vkFormat = VkTexture::ToVulkanFormat(format);
     if (vkFormat == VK_FORMAT_UNDEFINED) {
@@ -700,7 +700,7 @@ ITexture* VkDevice::CreateTexture(uint32_t width, uint32_t height, TextureFormat
     return new VkTexture(this, width, height, format, image, memory, imageView, sampler);
 }
 
-IBuffer* VkDevice::CreateBuffer(BufferUsage usage, BufferAccess access, uint32_t size, const void* data)
+IBuffer* VulkanDevice::CreateBuffer(BufferUsage usage, BufferAccess access, uint32_t size, const void* data)
 {
     VkBufferUsageFlags vkUsage = VkBuffer::ToVulkanUsage(usage);
 
@@ -762,7 +762,7 @@ IBuffer* VkDevice::CreateBuffer(BufferUsage usage, BufferAccess access, uint32_t
     return new VkBuffer(this, usage, access, size, buffer, memory);
 }
 
-IShader* VkDevice::CreateShader(const char* vertexShaderCode, const char* fragmentShaderCode)
+IShader* VulkanDevice::CreateShader(const char* vertexShaderCode, const char* fragmentShaderCode)
 {
     // For now, treat the shader code as file paths to SPIR-V files
     VkShaderModule vertexModule = ResourceHelpers::LoadShaderModule(this, vertexShaderCode);
@@ -781,42 +781,42 @@ IShader* VkDevice::CreateShader(const char* vertexShaderCode, const char* fragme
     return new VkShader(this, vertexModule, fragmentModule);
 }
 
-IRenderTarget* VkDevice::CreateRenderTarget(uint32_t width, uint32_t height, TextureFormat format)
+IRenderTarget* VulkanDevice::CreateRenderTarget(uint32_t width, uint32_t height, TextureFormat format)
 {
     // TODO: Implement render target class
     std::cerr << "CreateRenderTarget not yet implemented" << std::endl;
     return nullptr;
 }
 
-IDepthStencil* VkDevice::CreateDepthStencil(uint32_t width, uint32_t height)
+IDepthStencil* VulkanDevice::CreateDepthStencil(uint32_t width, uint32_t height)
 {
     // TODO: Implement depth stencil class
     std::cerr << "CreateDepthStencil not yet implemented" << std::endl;
     return nullptr;
 }
 
-void VkDevice::DestroyTexture(ITexture* texture)
+void VulkanDevice::DestroyTexture(ITexture* texture)
 {
     delete static_cast<VkTexture*>(texture);
 }
 
-void VkDevice::DestroyBuffer(IBuffer* buffer)
+void VulkanDevice::DestroyBuffer(IBuffer* buffer)
 {
     delete static_cast<VkBuffer*>(buffer);
 }
 
-void VkDevice::DestroyShader(IShader* shader)
+void VulkanDevice::DestroyShader(IShader* shader)
 {
     delete static_cast<VkShader*>(shader);
 }
 
-void VkDevice::DestroyRenderTarget(IRenderTarget* target)
+void VulkanDevice::DestroyRenderTarget(IRenderTarget* target)
 {
     // TODO: Implement when render target class exists
     std::cerr << "DestroyRenderTarget not yet implemented" << std::endl;
 }
 
-void VkDevice::DestroyDepthStencil(IDepthStencil* depth)
+void VulkanDevice::DestroyDepthStencil(IDepthStencil* depth)
 {
     // TODO: Implement when depth stencil class exists
     std::cerr << "DestroyDepthStencil not yet implemented" << std::endl;

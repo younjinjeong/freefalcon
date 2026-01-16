@@ -19,7 +19,7 @@ namespace Graphics {
 namespace Vulkan {
 
 // Forward declaration
-class VkDevice;
+class VulkanDevice;
 
 //=============================================================================
 // VkSwapChain - Swap Chain Management
@@ -27,7 +27,7 @@ class VkDevice;
 
 class VkSwapChain {
 public:
-    VkSwapChain(VkDevice* device);
+    VkSwapChain(VulkanDevice* device);
     ~VkSwapChain();
 
     // Initialization
@@ -66,7 +66,7 @@ private:
     void DestroyDepthResources();
 
     // Device reference
-    VkDevice* m_device;
+    VulkanDevice* m_device;
 
     // Swap chain
     VkSwapchainKHR m_swapChain = VK_NULL_HANDLE;

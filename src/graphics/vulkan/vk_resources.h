@@ -18,7 +18,7 @@ namespace Graphics {
 namespace Vulkan {
 
 // Forward declaration
-class VkDevice;
+class VulkanDevice;
 
 //=============================================================================
 // VkTexture - Vulkan Texture Resource
@@ -26,7 +26,7 @@ class VkDevice;
 
 class VkTexture : public ITexture {
 public:
-    VkTexture(VkDevice* device, uint32_t width, uint32_t height, TextureFormat format,
+    VkTexture(VulkanDevice* device, uint32_t width, uint32_t height, TextureFormat format,
               VkImage image, VkDeviceMemory memory, VkImageView imageView, VkSampler sampler);
     virtual ~VkTexture();
 
@@ -47,7 +47,7 @@ public:
     static TextureFormat FromVulkanFormat(VkFormat format);
 
 private:
-    VkDevice* m_device;
+    VulkanDevice* m_device;
     VkImage m_image;
     VkDeviceMemory m_memory;
     VkImageView m_imageView;
@@ -64,7 +64,7 @@ private:
 
 class VkBuffer : public IBuffer {
 public:
-    VkBuffer(VkDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
+    VkBuffer(VulkanDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
              VkBuffer buffer, VkDeviceMemory memory);
     virtual ~VkBuffer();
 
@@ -83,7 +83,7 @@ public:
     static VkBufferUsageFlagBits ToVulkanUsage(BufferUsage usage);
 
 private:
-    VkDevice* m_device;
+    VulkanDevice* m_device;
     VkBuffer m_buffer;
     VkDeviceMemory m_memory;
     uint32_t m_size;
@@ -98,7 +98,7 @@ private:
 
 class VkShader : public IShader {
 public:
-    VkShader(VkDevice* device, VkShaderModule vertexModule, VkShaderModule fragmentModule);
+    VkShader(VulkanDevice* device, VkShaderModule vertexModule, VkShaderModule fragmentModule);
     virtual ~VkShader();
 
     // IShader interface
@@ -114,7 +114,7 @@ public:
     VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
 
 private:
-    VkDevice* m_device;
+    VulkanDevice* m_device;
     VkShaderModule m_vertexModule;
     VkShaderModule m_fragmentModule;
     VkDescriptorSetLayout m_descriptorSetLayout;
@@ -137,18 +137,18 @@ private:
 namespace ResourceHelpers {
 
 // Create image with memory
-bool CreateImage(VkDevice* device, uint32_t width, uint32_t height, VkFormat format,
+bool CreateImage(VulkanDevice* device, uint32_t width, uint32_t height, VkFormat format,
                  VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
                  VkImage& image, VkDeviceMemory& memory);
 
 // Create image view
-VkImageView CreateImageView(VkDevice* device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+VkImageView CreateImageView(VulkanDevice* device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
 // Create sampler
-VkSampler CreateSampler(VkDevice* device);
+VkSampler CreateSampler(VulkanDevice* device);
 
 // Transition image layout
-void TransitionImageLayout(VkDevice* device, VkCommandBuffer commandBuffer, VkImage image,
+void TransitionImageLayout(VulkanDevice* device, VkCommandBuffer commandBuffer, VkImage image,
                            VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 // Copy buffer to image
@@ -156,16 +156,16 @@ void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage i
                        uint32_t width, uint32_t height);
 
 // Create buffer with memory
-bool CreateBuffer(VkDevice* device, VkDeviceSize size, VkBufferUsageFlags usage,
+bool CreateBuffer(VulkanDevice* device, VkDeviceSize size, VkBufferUsageFlags usage,
                   VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory);
 
 // Copy buffer to buffer
-void CopyBuffer(VkDevice* device, VkCommandBuffer commandBuffer,
+void CopyBuffer(VulkanDevice* device, VkCommandBuffer commandBuffer,
                 VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 // Load SPIR-V shader
-VkShaderModule LoadShaderModule(VkDevice* device, const char* filename);
-VkShaderModule CreateShaderModule(VkDevice* device, const uint32_t* code, size_t codeSize);
+VkShaderModule LoadShaderModule(VulkanDevice* device, const char* filename);
+VkShaderModule CreateShaderModule(VulkanDevice* device, const uint32_t* code, size_t codeSize);
 
 } // namespace ResourceHelpers
 

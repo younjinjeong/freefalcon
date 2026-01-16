@@ -33,7 +33,7 @@ PipelineConfig PipelineConfig::CreateDefault(VkExtent2D extent, VkRenderPass ren
 // VkPipeline Implementation
 //=============================================================================
 
-VkPipeline::VkPipeline(VkDevice* device)
+VkPipeline::VkPipeline(VulkanDevice* device)
     : m_device(device)
 {
 }
@@ -334,7 +334,7 @@ bool VkPipeline::CreateGraphicsPipeline(const PipelineConfig& config)
 // VkPipelineCache Implementation
 //=============================================================================
 
-VkPipelineCache::VkPipelineCache(VkDevice* device)
+VkPipelineCache::VkPipelineCache(VulkanDevice* device)
     : m_device(device)
 {
 }

@@ -12,7 +12,7 @@
 namespace Graphics {
 namespace Vulkan {
 
-VkCommandManager::VkCommandManager(VkDevice* device)
+VkCommandManager::VkCommandManager(VulkanDevice* device)
     : m_device(device)
 {
 }

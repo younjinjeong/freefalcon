@@ -18,7 +18,7 @@ namespace Vulkan {
 // VkTexture Implementation
 //=============================================================================
 
-VkTexture::VkTexture(VkDevice* device, uint32_t width, uint32_t height, TextureFormat format,
+VkTexture::VkTexture(VulkanDevice* device, uint32_t width, uint32_t height, TextureFormat format,
                      VkImage image, VkDeviceMemory memory, VkImageView imageView, VkSampler sampler)
     : m_device(device)
     , m_image(image)
@@ -95,7 +95,7 @@ TextureFormat VkTexture::FromVulkanFormat(VkFormat format)
 // VkBuffer Implementation
 //=============================================================================
 
-VkBuffer::VkBuffer(VkDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
+VkBuffer::VkBuffer(VulkanDevice* device, BufferUsage usage, BufferAccess access, uint32_t size,
                    ::VkBuffer buffer, VkDeviceMemory memory)
     : m_device(device)
     , m_buffer(buffer)
@@ -162,7 +162,7 @@ VkBufferUsageFlagBits VkBuffer::ToVulkanUsage(BufferUsage usage)
 // VkShader Implementation
 //=============================================================================
 
-VkShader::VkShader(VkDevice* device, VkShaderModule vertexModule, VkShaderModule fragmentModule)
+VkShader::VkShader(VulkanDevice* device, VkShaderModule vertexModule, VkShaderModule fragmentModule)
     : m_device(device)
     , m_vertexModule(vertexModule)
     , m_fragmentModule(fragmentModule)
@@ -379,7 +379,7 @@ void VkShader::SetTexture(const char* name, ITexture* texture)
 
 namespace ResourceHelpers {
 
-bool CreateImage(VkDevice* device, uint32_t width, uint32_t height, VkFormat format,
+bool CreateImage(VulkanDevice* device, uint32_t width, uint32_t height, VkFormat format,
                  VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
                  VkImage& image, VkDeviceMemory& memory)
 {
@@ -425,7 +425,7 @@ bool CreateImage(VkDevice* device, uint32_t width, uint32_t height, VkFormat for
     return true;
 }
 
-VkImageView CreateImageView(VkDevice* device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+VkImageView CreateImageView(VulkanDevice* device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -448,7 +448,7 @@ VkImageView CreateImageView(VkDevice* device, VkImage image, VkFormat format, Vk
     return imageView;
 }
 
-VkSampler CreateSampler(VkDevice* device)
+VkSampler CreateSampler(VulkanDevice* device)
 {
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -478,7 +478,7 @@ VkSampler CreateSampler(VkDevice* device)
     return sampler;
 }
 
-void TransitionImageLayout(VkDevice* device, VkCommandBuffer commandBuffer, VkImage image,
+void TransitionImageLayout(VulkanDevice* device, VkCommandBuffer commandBuffer, VkImage image,
                            VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkImageMemoryBarrier barrier{};
@@ -534,7 +534,7 @@ void CopyBufferToImage(VkCommandBuffer commandBuffer, ::VkBuffer buffer, VkImage
     vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
-bool CreateBuffer(VkDevice* device, VkDeviceSize size, VkBufferUsageFlags usage,
+bool CreateBuffer(VulkanDevice* device, VkDeviceSize size, VkBufferUsageFlags usage,
                   VkMemoryPropertyFlags properties, ::VkBuffer& buffer, VkDeviceMemory& memory)
 {
     VkDevice vkDevice = device->GetLogicalDevice();
@@ -570,7 +570,7 @@ bool CreateBuffer(VkDevice* device, VkDeviceSize size, VkBufferUsageFlags usage,
     return true;
 }
 
-void CopyBuffer(VkDevice* device, VkCommandBuffer commandBuffer,
+void CopyBuffer(VulkanDevice* device, VkCommandBuffer commandBuffer,
                 ::VkBuffer srcBuffer, ::VkBuffer dstBuffer, VkDeviceSize size)
 {
     VkBufferCopy copyRegion{};
@@ -580,7 +580,7 @@ void CopyBuffer(VkDevice* device, VkCommandBuffer commandBuffer,
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-VkShaderModule LoadShaderModule(VkDevice* device, const char* filename)
+VkShaderModule LoadShaderModule(VulkanDevice* device, const char* filename)
 {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -599,7 +599,7 @@ VkShaderModule LoadShaderModule(VkDevice* device, const char* filename)
     return CreateShaderModule(device, reinterpret_cast<const uint32_t*>(buffer.data()), fileSize);
 }
 
-VkShaderModule CreateShaderModule(VkDevice* device, const uint32_t* code, size_t codeSize)
+VkShaderModule CreateShaderModule(VulkanDevice* device, const uint32_t* code, size_t codeSize)
 {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

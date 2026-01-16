@@ -19,7 +19,7 @@ namespace Graphics {
 namespace Vulkan {
 
 // Forward declarations
-class VkDevice;
+class VulkanDevice;
 class VkSwapChain;
 class VkCommandManager;
 class VkPipelineCache;
@@ -88,7 +88,7 @@ private:
     uint32_t GetPrimitiveCount(PrimitiveTopology topology, uint32_t vertexCount);
 
     // Vulkan subsystems
-    std::unique_ptr<VkDevice> m_device;
+    std::unique_ptr<VulkanDevice> m_device;
     std::unique_ptr<VkSwapChain> m_swapChain;
     std::unique_ptr<VkCommandManager> m_commandManager;
     std::unique_ptr<VkPipelineCache> m_pipelineCache;
