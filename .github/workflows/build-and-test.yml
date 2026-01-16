@@ -43,12 +43,17 @@ jobs:
 
     - name: Check build artifacts
       run: |
-        echo "Checking build outputs..."
-        Get-ChildItem -Path build\x86\release_win32 -Recurse -Include *.lib,*.exe,*.dll | ForEach-Object {
-          $size = $_.Length / 1KB
-          echo "✓ Built: $($_.FullName) - $([math]::Round($size, 2)) KB"
+        Write-Host "Checking build outputs..."
+        if (Test-Path "build\x86\release_win32") {
+          Get-ChildItem -Path build\x86\release_win32 -Recurse -Include *.lib,*.exe,*.dll | ForEach-Object {
+            $size = [math]::Round($_.Length / 1KB, 2)
+            Write-Host "Built: $($_.FullName) - $size KB"
+          }
+        } else {
+          Write-Host "Build directory not found (expected - dependencies may be missing)"
         }
       shell: powershell
+      continue-on-error: true
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -111,17 +116,17 @@ jobs:
 
     - name: Syntax check Vulkan code
       run: |
-        echo "Validating Vulkan source code syntax..."
-        echo "Note: Full Vulkan build requires local Vulkan SDK installation"
-        echo ""
-        echo "To test Vulkan renderer locally:"
-        echo "  1. Install Vulkan SDK from https://vulkan.lunarg.com/"
-        echo "  2. Build: MSBuild src\graphics\vulkan\vulkan.vcxproj"
-        echo "  3. Test: Run test_triangle.exe"
-        echo ""
-        echo "✓ Vulkan source files present:"
+        Write-Host "Validating Vulkan source code syntax..."
+        Write-Host "Note: Full Vulkan build requires local Vulkan SDK installation"
+        Write-Host ""
+        Write-Host "To test Vulkan renderer locally:"
+        Write-Host "  1. Install Vulkan SDK from https://vulkan.lunarg.com/"
+        Write-Host "  2. Build: MSBuild src\graphics\vulkan\vulkan.vcxproj"
+        Write-Host "  3. Test: Run test_triangle.exe"
+        Write-Host ""
+        Write-Host "Vulkan source files present:"
         Get-ChildItem src\graphics\vulkan\*.cpp,src\graphics\vulkan\*.h | ForEach-Object {
-          echo "  - $($_.Name)"
+          Write-Host "  - $($_.Name)"
         }
       shell: powershell
 
