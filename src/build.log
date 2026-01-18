@@ -1,8 +1,0 @@
-.NET Framework용 Microsoft (R) Build Engine 버전 16.11.6+a918ceb31
-Copyright (C) Microsoft Corporation. All rights reserved.
-
-cl : 명령줄 warning D9035: 'Gm' 옵션은 더 이상 사용되지 않으므로 이후 릴리스에서 제거될 예정입니다. [C:\Users\younj\Workspace\games\freefalcon-central\src\comms\comms.vcxproj]
-  comenet.c
-C:\Users\younj\Workspace\games\freefalcon-central\src\comms\comenet.h(32,25): error C2079: 'apiheader'은(는) 정의되지 않은 struct 'ComApiHandle'을(를) 사용합니다. [C:\Users\younj\Workspace\games\freefalcon-central\src\comms\comms.vcxproj]
-C:\Users\younj\Workspace\games\freefalcon-central\src\comms\comenet.c(133,23): error C2224: '.protocol' 왼쪽에는 구조체/공용 구조체 형식이 있어야 합니다. [C:\Users\younj\Workspace\games\freefalcon-central\src\comms\comms.vcxproj]
-C:\Users\younj\Workspace\games\freefalcon-central\src\comms\comenet.c(211,23): error C2224: '.protocol' 왼쪽에는 구조체/공용 구조체 형식이 있어야 합니다. [C:\Users\younj\Workspace\games\freefalcon-central\src\comms\comms.vcxproj]

@@ -5,6 +5,7 @@ obj/
 
 # Build artifacts
 *.ipch
+*.log
 
 # Visual Studio files
 *.opensdf
@@ -18,4 +19,7 @@ obj/
 
 # Claude Code files
 .claude/
-nul
+CLAUDE.md
+.claudeignore
+*.claude.json
+*_claude_*
